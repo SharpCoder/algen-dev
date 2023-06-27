@@ -105,7 +105,7 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
     Node<Solution> combineNodes(Node<Solution> left, Node<Solution> right, Parameters<FeatureFlags> params) {
         Node<Solution>* node = new Node<Solution>();
 
-        // Inspect the nodes
+        // Choose a crossover point in the solution set
         bool chop = rand() % 13;
 
         for (int i = 0; i < chop; i++) {
