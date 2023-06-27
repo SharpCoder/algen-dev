@@ -112,7 +112,7 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
         Node<Solution>* node = new Node<Solution>();
 
         // Choose a crossover point in the solution set
-        bool chop = rand() % 13;
+        int chop = rand() % 13;
 
         for (int i = 0; i < chop; i++) {
             node->solution.deltas[i] = left.solution.deltas[i];
@@ -148,11 +148,11 @@ int main() {
     }
 
     // Setup the parameters for this experiment.
-    Parameters<FeatureFlags> params = {.generations = 500,
-                                       .population = 200,
+    Parameters<FeatureFlags> params = {.generations = 300,
+                                       .population = 150,
                                        .elitismFactor = 0.05,
                                        .crossoverFactor = 0.5,
-                                       .mutationFactor = 0.01,
+                                       .mutationFactor = 0.02,
                                        .tournamentSize = 5,
                                        .featureFLags = {}};
 
