@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <random>
 
 #include "../src/algen.cpp"
 
@@ -38,6 +39,11 @@ struct FeatureFlags {};
 /*******************************************/
 char target[13] = {'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!'};
 int randomCharacter() { return (rand() % 128) - (rand() % 128); }
+
+std::default_random_engine gen;
+std::uniform_real_distribution<float> distribution(0.0, 1.0);
+
+float randomFloat() { return distribution(gen); }
 void printNode(Node<Solution> node) {
     std::cout << "node " << node.score << " [";
     for (int i = 0; i < 13; i++) {
@@ -118,8 +124,8 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
 
         for (int i = 0; i < 13; i++) {
             // Mutation logic
-            if (rand() % 500 == 0) node->solution.deltas[i] = randomCharacter();
-            if (rand() % 500 == 0) node->solution.deltas[i] = randomCharacter();
+            if (randomFloat() < params.mutationFactor) node->solution.deltas[i] = randomCharacter();
+            if (randomFloat() < params.mutationFactor) node->solution.deltas[i] = randomCharacter();
 
             // Boundary logic
             if (node->solution.deltas[i] < -128) {
@@ -143,10 +149,10 @@ int main() {
 
     // Setup the parameters for this experiment.
     Parameters<FeatureFlags> params = {.generations = 500,
-                                       .population = 1000,
-                                       .elitismFactor = 0.01,
+                                       .population = 200,
+                                       .elitismFactor = 0.05,
                                        .crossoverFactor = 0.5,
-                                       .mutationFactor = 0.001,
+                                       .mutationFactor = 0.01,
                                        .tournamentSize = 5,
                                        .featureFLags = {}};
 
