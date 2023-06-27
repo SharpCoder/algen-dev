@@ -21,9 +21,11 @@ Node<Solution> tournamentSelection(Node<Solution>* nodes, unsigned int nodeLengt
 
     for (int i = 0; i < params.tournamentSize; i++) {
         int idx = rand() % nodeLength;
-        if (nodes[i].score > bestScore) {
-            bestScore = nodes[i].score;
-            bestNode = nodes[i];
+        Node<Solution> node = nodes[idx];
+
+        if (node.score > bestScore) {
+            bestScore = node.score;
+            bestNode = node;
         }
     }
 
@@ -83,6 +85,7 @@ Node<Solution> runAlgorithm(Parameters<FeatureFlags> params, InputData input,
         for (int r = 0; r < poplen - nextPopIter; r++) {
             Node<Solution> left = internal::tournamentSelection(population, poplen, params);
             Node<Solution> right = internal::tournamentSelection(population, poplen, params);
+
             nextPopulation[nextPopIter++] = algorithm->combineNodes(left, right, params);
         }
 
