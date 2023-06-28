@@ -111,20 +111,16 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
     Node<Solution> combineNodes(Node<Solution> left, Node<Solution> right, Parameters<FeatureFlags> params) {
         Node<Solution>* node = new Node<Solution>();
 
-        // Choose a crossover point in the solution set
-        int chop = rand() % 13;
-
-        for (int i = 0; i < chop; i++) {
-            node->solution.deltas[i] = left.solution.deltas[i];
-        }
-
-        for (int i = chop; i < 13; i++) {
-            node->solution.deltas[i] = right.solution.deltas[i];
+        for (int i = 0; i < 13; i++) {
+            if (randomFloat() < params.crossoverFactor) {
+                node->solution.deltas[i] = right.solution.deltas[i];
+            } else {
+                node->solution.deltas[i] = left.solution.deltas[i];
+            }
         }
 
         for (int i = 0; i < 13; i++) {
             // Mutation logic
-            if (randomFloat() < params.mutationFactor) node->solution.deltas[i] = randomCharacter();
             if (randomFloat() < params.mutationFactor) node->solution.deltas[i] = randomCharacter();
 
             // Boundary logic
@@ -148,12 +144,12 @@ int main() {
     }
 
     // Setup the parameters for this experiment.
-    Parameters<FeatureFlags> params = {.generations = 300,
-                                       .population = 150,
+    Parameters<FeatureFlags> params = {.generations = 100,
+                                       .population = 500,
                                        .elitismFactor = 0.05,
                                        .crossoverFactor = 0.5,
                                        .mutationFactor = 0.02,
-                                       .tournamentSize = 5,
+                                       .tournamentSize = 7,
                                        .featureFLags = {}};
 
     // Choose our analyzer and algorithm

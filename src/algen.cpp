@@ -83,11 +83,10 @@ namespace algen {
                 nextPopulation[nextPopIter + 1] = population[topIdx];
             }
 
-            for (int r = 0; r < poplen - nextPopIter; r++) {
+            for (; nextPopIter < poplen; nextPopIter++) {
                 Node<Solution> left = internal::tournamentSelection(population, poplen, params);
                 Node<Solution> right = internal::tournamentSelection(population, poplen, params);
-
-                nextPopulation[nextPopIter++] = algorithm->combineNodes(left, right, params);
+                nextPopulation[nextPopIter] = algorithm->combineNodes(left, right, params);
             }
 
             // Promote nextPopulation into real population
