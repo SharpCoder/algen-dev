@@ -5,6 +5,10 @@
 #include <cstdlib>
 #include <iostream>
 
+/**
+ * @brief The main namespace for the algen Genetic Algorithm Runner package.
+ *
+ */
 namespace algen {
 
     namespace internal {
@@ -35,6 +39,26 @@ namespace algen {
 
     }  // namespace internal
 
+    /**
+     * This method is the main entrypoint to the genetic algorithm runner
+     *
+     * Give elements of an experiment this method will setup your genetic algoirhtm with
+     * an initial population, evaluate each solution, score each solution, and then
+     * generate a new population using tournament selection and invoking the crossover
+     * method you've defined.
+     *
+     * After executing for the defined amount of time, the best solution identified
+     * will be returned.
+     *
+     * @tparam InputData The shape of information provided to each solution as an input.
+     * @tparam OutputData The shape of information representing a final output. This is what
+                          gets scored by the analyzer.
+     * @tparam Solution The shape of information representing a solution. This is what is used
+                        to generate the final output.
+     * @tparam FeatureFlags An optional struct defining feature flags that are passed throughout
+                            the system. Use this to experiment with different crossover, mutation,
+                            and scoring methods.
+     */
     template <class InputData, class OutputData, class Solution, class FeatureFlags>
     Node<Solution> runAlgorithm(Parameters<FeatureFlags> params, InputData input,
                                 Algorithm<InputData, OutputData, Solution, FeatureFlags>* algorithm,
@@ -56,7 +80,6 @@ namespace algen {
 
         for (int generation = 0; generation < params.generations; generation++) {
             int nextPopIter = 0;
-            std::cout << "Starting generation " << generation << std::endl;
 
             // Evaluate all the solutions
             for (int r = 0; r < poplen; r++) {
@@ -95,7 +118,6 @@ namespace algen {
             }
         }
 
-        std::cout << "Simulation terminated" << std::endl;
         return bestSolution;
     }
 
