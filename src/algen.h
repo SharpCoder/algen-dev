@@ -23,7 +23,7 @@ namespace algen {
         float crossoverFactor;
         float mutationFactor;
         unsigned int tournamentSize;
-        FeatureFlags featureFLags;
+        FeatureFlags featureFlags;
     };
 
     template <class InputData, class OutputData, class Solution, class FeatureFlags>

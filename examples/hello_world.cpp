@@ -150,7 +150,7 @@ int main() {
                                        .crossoverFactor = 0.5,
                                        .mutationFactor = 0.02,
                                        .tournamentSize = 7,
-                                       .featureFLags = {}};
+                                       .featureFlags = {}};
 
     // Choose our analyzer and algorithm
     HelloAlgorithm algorithm;
