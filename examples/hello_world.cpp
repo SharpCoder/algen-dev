@@ -61,7 +61,7 @@ class HelloAnalyzer : public Analyzer<OutputData, FeatureFlags> {
     // Score a given solution by calculating how far off each letter
     // is from the target and using the inverse difference as
     // the score.
-    float score(OutputData attempt, Parameters<FeatureFlags> params) {
+    float score(OutputData attempt, const Parameters<FeatureFlags>* params) {
         float score = 0.0;
         for (int i = 0; i < 13; i++) {
             int difference = abs(attempt.final[i] - target[i]);
@@ -83,17 +83,18 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
    public:
     // This method will take a solution, the input, the parameters, and evaluate
     // what a final output would look like given those things.
-    OutputData generateOutput(Node<Solution> node, InputData input, Parameters<FeatureFlags> params) {
+    OutputData generateOutput(const Node<Solution>* node, const InputData* input,
+                              const Parameters<FeatureFlags>* params) {
         OutputData* result = new OutputData();
         for (int i = 0; i < 13; i++) {
-            result->final[i] = (char)(input.seed[i] + node.solution.deltas[i]);
+            result->final[i] = (char)(input->seed[i] + node->solution.deltas[i]);
         }
         return *result;
     }
 
     // This method will create a brand new, empty state. It should be randomized
     // values which are used to seed the initial population.
-    Node<Solution> allocateNode(InputData input, Parameters<FeatureFlags> params) {
+    Node<Solution> allocateNode(const InputData* input, const Parameters<FeatureFlags>* params) {
         Node<Solution>* node = new Node<Solution>();
         node->score = std::numeric_limits<float>::min();
 
@@ -108,20 +109,21 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
     // There are many ways to implement this method, but in general, you should strive to
     // implement crossover and mutation (at a minimum). Whatever that looks likef or your
     // specific problem.
-    Node<Solution> combineNodes(Node<Solution> left, Node<Solution> right, Parameters<FeatureFlags> params) {
+    Node<Solution> combineNodes(const Node<Solution>* left, const Node<Solution>* right,
+                                const Parameters<FeatureFlags>* params) {
         Node<Solution>* node = new Node<Solution>();
 
         for (int i = 0; i < 13; i++) {
-            if (randomFloat() < params.crossoverFactor) {
-                node->solution.deltas[i] = right.solution.deltas[i];
+            if (randomFloat() < params->crossoverFactor) {
+                node->solution.deltas[i] = right->solution.deltas[i];
             } else {
-                node->solution.deltas[i] = left.solution.deltas[i];
+                node->solution.deltas[i] = left->solution.deltas[i];
             }
         }
 
         for (int i = 0; i < 13; i++) {
             // Mutation logic
-            if (randomFloat() < params.mutationFactor) node->solution.deltas[i] = randomCharacter();
+            if (randomFloat() < params->mutationFactor) node->solution.deltas[i] = randomCharacter();
 
             // Boundary logic
             if (node->solution.deltas[i] < -128) {
@@ -144,11 +146,11 @@ int main() {
     }
 
     // Setup the parameters for this experiment.
-    Parameters<FeatureFlags> params = {.generations = 100,
-                                       .population = 500,
+    Parameters<FeatureFlags> params = {.generations = 1000,
+                                       .population = 5000,
                                        .elitismFactor = 0.05,
-                                       .crossoverFactor = 0.5,
-                                       .mutationFactor = 0.02,
+                                       .crossoverFactor = 0.25,
+                                       .mutationFactor = 0.025,
                                        .tournamentSize = 7,
                                        .featureFlags = {}};
 
@@ -157,9 +159,9 @@ int main() {
     HelloAnalyzer analyzer;
 
     // Execute the program.
-    Node<Solution> winner = runAlgorithm(params, input, &algorithm, &analyzer);
+    Node<Solution> winner = runAlgorithm(&params, &input, &algorithm, &analyzer);
 
     // Output the best solution we've found
-    std::cout << "Winning output " << algorithm.generateOutput(winner, input, params).final << std::endl;
+    std::cout << "Winning output " << algorithm.generateOutput(&winner, &input, &params).final << std::endl;
     return 0;
 }

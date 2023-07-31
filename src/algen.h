@@ -29,15 +29,17 @@ namespace algen {
     template <class InputData, class OutputData, class Solution, class FeatureFlags>
     class Algorithm {
        public:
-        virtual OutputData generateOutput(Node<Solution> node, InputData input, Parameters<FeatureFlags> params);
-        virtual Node<Solution> allocateNode(InputData input, Parameters<FeatureFlags> params);
-        virtual Node<Solution> combineNodes(Node<Solution> left, Node<Solution> right, Parameters<FeatureFlags> params);
+        virtual OutputData generateOutput(const Node<Solution>* node, const InputData* input,
+                                          const Parameters<FeatureFlags>* params);
+        virtual Node<Solution> allocateNode(const InputData* input, const Parameters<FeatureFlags>* params);
+        virtual Node<Solution> combineNodes(const Node<Solution>* left, const Node<Solution>* right,
+                                            const Parameters<FeatureFlags>* params);
     };
 
     template <class OutputData, class FeatureFlags>
     class Analyzer {
        public:
-        virtual float score(OutputData attempt, Parameters<FeatureFlags> params);
+        virtual float score(OutputData attempt, const Parameters<FeatureFlags>* params);
     };
 
 }  // namespace algen
