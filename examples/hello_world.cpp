@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <limits>
@@ -57,7 +58,7 @@ void printNode(Node<Solution> node) {
 /*******************************************/
 
 // The Analyzer class is used to score a given solution
-class HelloAnalyzer : public Analyzer<OutputData, FeatureFlags> {
+class HelloAnalyzer : public Analyzer<OutputData, Solution, FeatureFlags> {
     // Score a given solution by calculating how far off each letter
     // is from the target and using the inverse difference as
     // the score.
@@ -74,6 +75,11 @@ class HelloAnalyzer : public Analyzer<OutputData, FeatureFlags> {
 
         return score;
     }
+
+    // This method is invoked after each generation. Check if
+    // the provided output matches the winning condition.
+    // If this method returns true, the runner will short-cirucit.
+    bool checkSolution(float score, Solution solution, OutputData attempt) { return score == 13.0 * 128.0; }
 };
 
 // The Algorithm class is used to perform the actual genetic algorithm
@@ -137,8 +143,14 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
     }
 };
 
+int64_t now() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
+        .count();
+}
+
 int main() {
     InputData input;
+    int64_t begin_time = now();
 
     // Randomize the input to alpha characters
     for (int i = 0; i < 13; i++) {
@@ -161,7 +173,10 @@ int main() {
     // Execute the program.
     Node<Solution> winner = runAlgorithm(&params, &input, &algorithm, &analyzer);
 
+    int64_t end_time = now();
+
     // Output the best solution we've found
     std::cout << "Winning output " << algorithm.generateOutput(&winner, &input, &params).final << std::endl;
+    std::cout << "Took " << (end_time - begin_time) << "ms " << std::endl;
     return 0;
 }

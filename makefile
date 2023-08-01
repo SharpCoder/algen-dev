@@ -1,4 +1,4 @@
-hello_world: examples/hello_world.cpp
+all: examples/hello_world.cpp
 	g++ examples/hello_world.cpp -o hello_world
 
 clean:

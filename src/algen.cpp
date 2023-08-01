@@ -2,6 +2,8 @@
 #include "algen.h"
 
 #include <algorithm>
+#include <boost/asio.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <cstdlib>
 #include <iostream>
 
@@ -19,18 +21,16 @@ namespace algen {
         }
 
         template <class Solution, class FeatureFlags>
-        Node<Solution> tournamentSelection(const Node<Solution>* nodes, unsigned int nodeLength,
-                                           const Parameters<FeatureFlags>* params) {
-            Node<Solution> bestNode;
+        const Node<Solution>* tournamentSelection(const Node<Solution>* nodes, unsigned int nodeLength,
+                                                  const Parameters<FeatureFlags>* params) {
+            const Node<Solution>* bestNode;
             float bestScore = 0.0;
 
             for (int i = 0; i < params->tournamentSize; i++) {
                 int idx = rand() % nodeLength;
-                Node<Solution> node = nodes[idx];
-
-                if (node.score > bestScore) {
-                    bestScore = node.score;
-                    bestNode = node;
+                if (nodes[idx].score > bestScore) {
+                    bestScore = nodes[idx].score;
+                    bestNode = &nodes[idx];
                 }
             }
 
@@ -62,7 +62,7 @@ namespace algen {
     template <class InputData, class OutputData, class Solution, class FeatureFlags>
     Node<Solution> runAlgorithm(const Parameters<FeatureFlags>* params, const InputData* input,
                                 Algorithm<InputData, OutputData, Solution, FeatureFlags>* algorithm,
-                                Analyzer<OutputData, FeatureFlags>* analyzer) {
+                                Analyzer<OutputData, Solution, FeatureFlags>* analyzer) {
         // Define generational parameters
         int poplen = params->population;
         Node<Solution> population[poplen];
@@ -93,6 +93,11 @@ namespace algen {
                 }
             }
 
+            // Check for the winning condition.
+            if (analyzer->checkSolution(bestScore, bestSolution.solution, bestOutput)) {
+                break;
+            }
+
             // Create the next population'
             std::sort(population, population + (sizeof(population) / sizeof(population[0])),
                       algen::internal::sort<Solution>);
@@ -107,9 +112,9 @@ namespace algen {
             }
 
             for (; nextPopIter < poplen; nextPopIter++) {
-                Node<Solution> left = internal::tournamentSelection(population, poplen, params);
-                Node<Solution> right = internal::tournamentSelection(population, poplen, params);
-                nextPopulation[nextPopIter] = algorithm->combineNodes(&left, &right, params);
+                const Node<Solution>* left = internal::tournamentSelection(population, poplen, params);
+                const Node<Solution>* right = internal::tournamentSelection(population, poplen, params);
+                nextPopulation[nextPopIter] = algorithm->combineNodes(left, right, params);
             }
 
             // Promote nextPopulation into real population
