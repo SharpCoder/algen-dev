@@ -3,12 +3,14 @@
 
 #include <memory>
 
+using namespace std;
+
 namespace algen {
 
     template <class Solution>
     struct Node {
         float score;
-        std::shared_ptr<Solution> solution;
+        shared_ptr<Solution> solution;
     };
 
     template <class Solution>
@@ -61,13 +63,12 @@ namespace algen {
         // Output -> "HELLO"
         //
         // This will later be scored with the analyzer.
-        virtual std::shared_ptr<OutputData> generateOutput(const std::shared_ptr<Solution> solution,
-                                                           const InputData& input,
-                                                           const Parameters<FeatureFlags>& params) = 0;
+        virtual shared_ptr<OutputData> generateOutput(const shared_ptr<Solution> solution, const InputData& input,
+                                                      const Parameters<FeatureFlags>& params) = 0;
 
         // This method should generate a randomized Solution.
-        virtual std::shared_ptr<Solution> generateRandomSolution(const InputData& input,
-                                                                 const Parameters<FeatureFlags>& params) = 0;
+        virtual shared_ptr<Solution> generateRandomSolution(const InputData& input,
+                                                            const Parameters<FeatureFlags>& params) = 0;
 
         // Given two Node<Solution>, generate an offsprint using whatever
         // genetic algorithm techniques you like. At a minimum, it should
@@ -75,9 +76,8 @@ namespace algen {
         //
         // - Crossover
         // - Mutation
-        virtual std::shared_ptr<Solution> combineNodes(const std::shared_ptr<Solution> left,
-                                                       const std::shared_ptr<Solution> right,
-                                                       const Parameters<FeatureFlags>& params) = 0;
+        virtual shared_ptr<Solution> combineNodes(const shared_ptr<Solution> left, const shared_ptr<Solution> right,
+                                                  const Parameters<FeatureFlags>& params) = 0;
     };
 
     template <class OutputData, class Solution, class FeatureFlags>
@@ -85,14 +85,14 @@ namespace algen {
        public:
         // Given a final output, this method will score it in a deterministic fashion
         // to determine how well it did.
-        virtual float score(std::shared_ptr<OutputData> attempt, const Parameters<FeatureFlags>& params) = 0;
+        virtual float score(shared_ptr<OutputData> attempt, const Parameters<FeatureFlags>& params) = 0;
 
         // Given the best score, solution, and final output, determine if the desired solution
         // has been found.
         //
         // If this method returns true, the simulation will terminate.
-        virtual bool checkSolution(float score, std::shared_ptr<Solution> solution,
-                                   const std::shared_ptr<OutputData> attempt) = 0;
+        virtual bool checkSolution(float score, shared_ptr<Solution> solution,
+                                   const shared_ptr<OutputData> attempt) = 0;
     };
 
 }  // namespace algen

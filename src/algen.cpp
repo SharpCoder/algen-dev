@@ -7,6 +7,8 @@
 #include <limits>
 #include <memory>
 
+using namespace std;
+
 /**
  * @brief The main namespace for the algen Genetic Algorithm Runner package.
  *
@@ -16,16 +18,15 @@ namespace algen {
     namespace internal {
 
         template <class T>
-        bool sort(std::shared_ptr<Node<T>> a, std::shared_ptr<Node<T>> b) {
+        bool sort(shared_ptr<Node<T>> a, shared_ptr<Node<T>> b) {
             return a->score > b->score;
         }
 
         template <class Solution, class FeatureFlags>
-        std::shared_ptr<Node<Solution>> tournamentSelection(std::shared_ptr<Node<Solution>> nodes[],
-                                                            unsigned int nodeLength,
-                                                            const Parameters<FeatureFlags>& params) {
-            std::shared_ptr<Node<Solution>> bestNode;
-            float bestScore = std::numeric_limits<float>::min();
+        shared_ptr<Node<Solution>> tournamentSelection(shared_ptr<Node<Solution>> nodes[], unsigned int nodeLength,
+                                                       const Parameters<FeatureFlags>& params) {
+            shared_ptr<Node<Solution>> bestNode;
+            float bestScore = numeric_limits<float>::min();
 
             for (unsigned int i = 0; i < params.tournamentSize; i++) {
                 int idx = rand() % nodeLength;
@@ -61,24 +62,23 @@ namespace algen {
                             and scoring methods.
      */
     template <class InputData, class OutputData, class Solution, class FeatureFlags>
-    std::shared_ptr<Solution> runAlgorithm(const Parameters<FeatureFlags>& params, const InputData& input,
-                                           Algorithm<InputData, OutputData, Solution, FeatureFlags>& algorithm,
-                                           Analyzer<OutputData, Solution, FeatureFlags>& analyzer) {
+    shared_ptr<Solution> runAlgorithm(const Parameters<FeatureFlags>& params, const InputData& input,
+                                      Algorithm<InputData, OutputData, Solution, FeatureFlags>& algorithm,
+                                      Analyzer<OutputData, Solution, FeatureFlags>& analyzer) {
         // Define generational parameters
         int poplen = params.population;
-        std::shared_ptr<Node<Solution>> population[poplen];
-        std::shared_ptr<Node<Solution>> nextPopulation[poplen];
-        std::shared_ptr<OutputData> outputs[poplen];
+        shared_ptr<Node<Solution>> population[poplen];
+        shared_ptr<Node<Solution>> nextPopulation[poplen];
+        shared_ptr<OutputData> outputs[poplen];
 
         // Best solutions
-        float bestScore = std::numeric_limits<float>::min();
-        std::shared_ptr<Solution> bestSolution;
-        std::shared_ptr<OutputData> bestOutput;
+        float bestScore = numeric_limits<float>::min();
+        shared_ptr<Solution> bestSolution;
+        shared_ptr<OutputData> bestOutput;
 
         for (int i = 0; i < poplen; i++) {
-            population[i] = std::shared_ptr<Node<Solution>>(
-                new Node<Solution>{.score = std::numeric_limits<float>::min(),
-                                   .solution = algorithm.generateRandomSolution(input, params)});
+            population[i] = shared_ptr<Node<Solution>>(new Node<Solution>{
+                .score = numeric_limits<float>::min(), .solution = algorithm.generateRandomSolution(input, params)});
         }
 
         for (int generation = 0; params.generations; generation++) {
@@ -102,8 +102,8 @@ namespace algen {
             }
 
             // Create the next population'
-            std::sort(population, population + (sizeof(population) / sizeof(population[0])),
-                      algen::internal::sort<Solution>);
+            sort(population, population + (sizeof(population) / sizeof(population[0])),
+                 algen::internal::sort<Solution>);
 
             // Take the creame of the crop, in both directions. And we multiply by 0.5 because
             // each iteration takes 2 nodes
@@ -115,11 +115,11 @@ namespace algen {
             }
 
             for (; nextPopIter < poplen; nextPopIter++) {
-                std::shared_ptr<Node<Solution>> left = internal::tournamentSelection(population, poplen, params);
-                std::shared_ptr<Node<Solution>> right = internal::tournamentSelection(population, poplen, params);
+                shared_ptr<Node<Solution>> left = internal::tournamentSelection(population, poplen, params);
+                shared_ptr<Node<Solution>> right = internal::tournamentSelection(population, poplen, params);
 
-                nextPopulation[nextPopIter] = std::make_shared<Node<Solution>>();
-                nextPopulation[nextPopIter]->score = std::numeric_limits<float>::min();
+                nextPopulation[nextPopIter] = make_shared<Node<Solution>>();
+                nextPopulation[nextPopIter]->score = numeric_limits<float>::min();
                 nextPopulation[nextPopIter]->solution = algorithm.combineNodes(left->solution, right->solution, params);
             }
 
