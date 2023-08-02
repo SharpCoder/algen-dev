@@ -1,7 +1,6 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
-#include <limits>
 #include <memory>
 #include <random>
 
@@ -69,7 +68,7 @@ class HelloAnalyzer : public Analyzer<OutputData, Solution, FeatureFlags> {
     // This method is invoked after each generation. Check if
     // the provided output matches the winning condition.
     // If this method returns true, the runner will short-cirucit.
-    bool checkSolution(float score, Solution solution, const std::shared_ptr<OutputData> attempt) {
+    bool checkSolution(float score, std::shared_ptr<Solution> solution, const std::shared_ptr<OutputData> attempt) {
         return score == 13.0 * 128.0;
     }
 };
@@ -81,12 +80,12 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
    public:
     // This method will take a solution, the input, the parameters, and evaluate
     // what a final output would look like given those things.
-    std::shared_ptr<OutputData> generateOutput(const std::shared_ptr<Node<Solution>> node, const InputData& input,
+    std::shared_ptr<OutputData> generateOutput(const std::shared_ptr<Solution> solution, const InputData& input,
                                                const Parameters<FeatureFlags>& params) {
         std::shared_ptr<OutputData> result(new OutputData());
 
         for (int i = 0; i < 13; i++) {
-            result->final[i] = (char)(input.seed[i] + node->solution.deltas[i]);
+            result->final[i] = (char)(input.seed[i] + solution->deltas[i]);
         }
 
         return result;
@@ -94,47 +93,45 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
 
     // This method will create a brand new, empty state. It should be randomized
     // values which are used to seed the initial population.
-    std::shared_ptr<Node<Solution>> allocateNode(const InputData& input, const Parameters<FeatureFlags>& params) {
-        std::shared_ptr<Node<Solution>> node(new Node<Solution>());
-        node->score = std::numeric_limits<float>::min();
+    std::shared_ptr<Solution> generateRandomSolution(const InputData& input, const Parameters<FeatureFlags>& params) {
+        auto solution = std::make_shared<Solution>();
 
         for (int i = 0; i < 13; i++) {
-            node->solution.deltas[i] = randomCharacter();
+            solution->deltas[i] = randomCharacter();
         }
 
-        return node;
+        return solution;
     }
 
     // This method will take two solutions and try to create a better one using parts of each.
     // There are many ways to implement this method, but in general, you should strive to
     // implement crossover and mutation (at a minimum). Whatever that looks likef or your
     // specific problem.
-    std::shared_ptr<Node<Solution>> combineNodes(const std::shared_ptr<Node<Solution>> left,
-                                                 const std::shared_ptr<Node<Solution>> right,
-                                                 const Parameters<FeatureFlags>& params) {
-        std::shared_ptr<Node<Solution>> node(new Node<Solution>());
+    std::shared_ptr<Solution> combineNodes(const std::shared_ptr<Solution> left, const std::shared_ptr<Solution> right,
+                                           const Parameters<FeatureFlags>& params) {
+        std::shared_ptr<Solution> result(new Solution());
 
         for (int i = 0; i < 13; i++) {
             if (randomFloat() < params.crossoverFactor) {
-                node->solution.deltas[i] = right->solution.deltas[i];
+                result->deltas[i] = right->deltas[i];
             } else {
-                node->solution.deltas[i] = left->solution.deltas[i];
+                result->deltas[i] = left->deltas[i];
             }
         }
 
         for (int i = 0; i < 13; i++) {
             // Mutation logic
-            if (randomFloat() < params.mutationFactor) node->solution.deltas[i] = randomCharacter();
+            if (randomFloat() < params.mutationFactor) result->deltas[i] = randomCharacter();
 
             // Boundary logic
-            if (node->solution.deltas[i] < -128) {
-                node->solution.deltas[i] = -128;
-            } else if (node->solution.deltas[i] > 128) {
-                node->solution.deltas[i] = 128;
+            if (result->deltas[i] < -128) {
+                result->deltas[i] = -128;
+            } else if (result->deltas[i] > 128) {
+                result->deltas[i] = 128;
             }
         }
 
-        return node;
+        return result;
     }
 };
 

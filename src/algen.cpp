@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
+#include <memory>
 
 /**
  * @brief The main namespace for the algen Genetic Algorithm Runner package.
@@ -23,7 +25,7 @@ namespace algen {
                                                             unsigned int nodeLength,
                                                             const Parameters<FeatureFlags>& params) {
             std::shared_ptr<Node<Solution>> bestNode;
-            float bestScore = 0.0;
+            float bestScore = std::numeric_limits<float>::min();
 
             for (unsigned int i = 0; i < params.tournamentSize; i++) {
                 int idx = rand() % nodeLength;
@@ -59,9 +61,9 @@ namespace algen {
                             and scoring methods.
      */
     template <class InputData, class OutputData, class Solution, class FeatureFlags>
-    std::shared_ptr<Node<Solution>> runAlgorithm(const Parameters<FeatureFlags>& params, const InputData& input,
-                                                 Algorithm<InputData, OutputData, Solution, FeatureFlags>& algorithm,
-                                                 Analyzer<OutputData, Solution, FeatureFlags>& analyzer) {
+    std::shared_ptr<Solution> runAlgorithm(const Parameters<FeatureFlags>& params, const InputData& input,
+                                           Algorithm<InputData, OutputData, Solution, FeatureFlags>& algorithm,
+                                           Analyzer<OutputData, Solution, FeatureFlags>& analyzer) {
         // Define generational parameters
         int poplen = params.population;
         std::shared_ptr<Node<Solution>> population[poplen];
@@ -69,12 +71,14 @@ namespace algen {
         std::shared_ptr<OutputData> outputs[poplen];
 
         // Best solutions
-        float bestScore = 0.0;
-        std::shared_ptr<Node<Solution>> bestSolution;
+        float bestScore = std::numeric_limits<float>::min();
+        std::shared_ptr<Solution> bestSolution;
         std::shared_ptr<OutputData> bestOutput;
 
         for (int i = 0; i < poplen; i++) {
-            population[i] = algorithm.allocateNode(input, params);
+            population[i] = std::shared_ptr<Node<Solution>>(
+                new Node<Solution>{.score = std::numeric_limits<float>::min(),
+                                   .solution = algorithm.generateRandomSolution(input, params)});
         }
 
         for (int generation = 0; params.generations; generation++) {
@@ -82,18 +86,18 @@ namespace algen {
 
             // Evaluate all the solutions
             for (int r = 0; r < poplen; r++) {
-                outputs[r] = algorithm.generateOutput(population[r], input, params);
+                outputs[r] = algorithm.generateOutput(population[r]->solution, input, params);
                 population[r]->score = analyzer.score(outputs[r], params);
 
                 if (population[r]->score > bestScore) {
                     bestScore = population[r]->score;
-                    bestSolution = population[r];
+                    bestSolution = population[r]->solution;
                     bestOutput = outputs[r];
                 }
             }
 
             // Check for the winning condition.
-            if (analyzer.checkSolution(bestScore, bestSolution->solution, bestOutput)) {
+            if (analyzer.checkSolution(bestScore, bestSolution, bestOutput)) {
                 break;
             }
 
@@ -114,7 +118,9 @@ namespace algen {
                 std::shared_ptr<Node<Solution>> left = internal::tournamentSelection(population, poplen, params);
                 std::shared_ptr<Node<Solution>> right = internal::tournamentSelection(population, poplen, params);
 
-                nextPopulation[nextPopIter] = algorithm.combineNodes(left, right, params);
+                nextPopulation[nextPopIter] = std::make_shared<Node<Solution>>();
+                nextPopulation[nextPopIter]->score = std::numeric_limits<float>::min();
+                nextPopulation[nextPopIter]->solution = algorithm.combineNodes(left->solution, right->solution, params);
             }
 
             // Promote nextPopulation into real population

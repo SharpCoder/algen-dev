@@ -3,7 +3,7 @@ all: examples/hello_world.cpp
 
 profile:
 	g++ -pg examples/hello_world.cpp -o hello_world.profile
-	valgrind --tool=memcheck --leak-check=full ./hello_world.profile
+	valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all ./hello_world.profile
 
 
 clean:
