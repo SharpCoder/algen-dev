@@ -41,18 +41,7 @@ struct FeatureFlags {};
 /*******************************************/
 char target[13] = {'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!'};
 int randomCharacter() { return (rand() % 128) - (rand() % 128); }
-
-std::default_random_engine gen;
-std::uniform_real_distribution<float> distribution(0.0, 1.0);
-
-float randomFloat() { return distribution(gen); }
-void printNode(Node<Solution> node) {
-    std::cout << "node " << node.score << " [";
-    for (int i = 0; i < 13; i++) {
-        std::cout << node.solution.deltas[i] << " ";
-    }
-    std::cout << "]" << std::endl;
-}
+float randomFloat() { return rand() / float(RAND_MAX); }
 
 /*******************************************/
 /* Implementation of classes               */
