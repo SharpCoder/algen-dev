@@ -2,8 +2,6 @@
 #include "algen.h"
 
 #include <algorithm>
-#include <boost/asio.hpp>
-#include <boost/asio/thread_pool.hpp>
 #include <cstdlib>
 #include <iostream>
 
