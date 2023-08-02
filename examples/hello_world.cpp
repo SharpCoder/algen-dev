@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <random>
 
 #include "../src/algen.cpp"
@@ -62,10 +63,10 @@ class HelloAnalyzer : public Analyzer<OutputData, Solution, FeatureFlags> {
     // Score a given solution by calculating how far off each letter
     // is from the target and using the inverse difference as
     // the score.
-    float score(OutputData attempt, const Parameters<FeatureFlags>* params) {
+    float score(std::shared_ptr<OutputData> attempt, const Parameters<FeatureFlags>& params) {
         float score = 0.0;
         for (int i = 0; i < 13; i++) {
-            int difference = abs(attempt.final[i] - target[i]);
+            int difference = abs(attempt->final[i] - target[i]);
             if (difference > 128) {
                 difference = 128;
             }
@@ -79,7 +80,9 @@ class HelloAnalyzer : public Analyzer<OutputData, Solution, FeatureFlags> {
     // This method is invoked after each generation. Check if
     // the provided output matches the winning condition.
     // If this method returns true, the runner will short-cirucit.
-    bool checkSolution(float score, Solution solution, OutputData attempt) { return score == 13.0 * 128.0; }
+    bool checkSolution(float score, Solution solution, const std::shared_ptr<OutputData> attempt) {
+        return score == 13.0 * 128.0;
+    }
 };
 
 // The Algorithm class is used to perform the actual genetic algorithm
@@ -89,38 +92,41 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
    public:
     // This method will take a solution, the input, the parameters, and evaluate
     // what a final output would look like given those things.
-    OutputData generateOutput(const Node<Solution>* node, const InputData* input,
-                              const Parameters<FeatureFlags>* params) {
-        OutputData* result = new OutputData();
+    std::shared_ptr<OutputData> generateOutput(const std::shared_ptr<Node<Solution>> node, const InputData& input,
+                                               const Parameters<FeatureFlags>& params) {
+        std::shared_ptr<OutputData> result(new OutputData());
+
         for (int i = 0; i < 13; i++) {
-            result->final[i] = (char)(input->seed[i] + node->solution.deltas[i]);
+            result->final[i] = (char)(input.seed[i] + node->solution.deltas[i]);
         }
-        return *result;
+
+        return result;
     }
 
     // This method will create a brand new, empty state. It should be randomized
     // values which are used to seed the initial population.
-    Node<Solution> allocateNode(const InputData* input, const Parameters<FeatureFlags>* params) {
-        Node<Solution>* node = new Node<Solution>();
+    std::shared_ptr<Node<Solution>> allocateNode(const InputData& input, const Parameters<FeatureFlags>& params) {
+        std::shared_ptr<Node<Solution>> node(new Node<Solution>());
         node->score = std::numeric_limits<float>::min();
 
         for (int i = 0; i < 13; i++) {
             node->solution.deltas[i] = randomCharacter();
         }
 
-        return *node;
+        return node;
     }
 
     // This method will take two solutions and try to create a better one using parts of each.
     // There are many ways to implement this method, but in general, you should strive to
     // implement crossover and mutation (at a minimum). Whatever that looks likef or your
     // specific problem.
-    Node<Solution> combineNodes(const Node<Solution>* left, const Node<Solution>* right,
-                                const Parameters<FeatureFlags>* params) {
-        Node<Solution>* node = new Node<Solution>();
+    std::shared_ptr<Node<Solution>> combineNodes(const std::shared_ptr<Node<Solution>> left,
+                                                 const std::shared_ptr<Node<Solution>> right,
+                                                 const Parameters<FeatureFlags>& params) {
+        std::shared_ptr<Node<Solution>> node(new Node<Solution>());
 
         for (int i = 0; i < 13; i++) {
-            if (randomFloat() < params->crossoverFactor) {
+            if (randomFloat() < params.crossoverFactor) {
                 node->solution.deltas[i] = right->solution.deltas[i];
             } else {
                 node->solution.deltas[i] = left->solution.deltas[i];
@@ -129,7 +135,7 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
 
         for (int i = 0; i < 13; i++) {
             // Mutation logic
-            if (randomFloat() < params->mutationFactor) node->solution.deltas[i] = randomCharacter();
+            if (randomFloat() < params.mutationFactor) node->solution.deltas[i] = randomCharacter();
 
             // Boundary logic
             if (node->solution.deltas[i] < -128) {
@@ -139,7 +145,7 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
             }
         }
 
-        return *node;
+        return node;
     }
 };
 
@@ -171,12 +177,11 @@ int main() {
     HelloAnalyzer analyzer;
 
     // Execute the program.
-    Node<Solution> winner = runAlgorithm(&params, &input, &algorithm, &analyzer);
-
+    auto winner = runAlgorithm(params, input, algorithm, analyzer);
     int64_t end_time = now();
 
     // Output the best solution we've found
-    std::cout << "Winning output " << algorithm.generateOutput(&winner, &input, &params).final << std::endl;
+    std::cout << "Winning output " << algorithm.generateOutput(winner, input, params)->final << std::endl;
     std::cout << "Took " << (end_time - begin_time) << "ms " << std::endl;
     return 0;
 }

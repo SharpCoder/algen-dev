@@ -16,21 +16,22 @@ namespace algen {
     namespace internal {
 
         template <class T>
-        bool sort(Node<T>& a, Node<T>& b) {
-            return a.score > b.score;
+        bool sort(std::shared_ptr<Node<T>> a, std::shared_ptr<Node<T>> b) {
+            return a->score > b->score;
         }
 
         template <class Solution, class FeatureFlags>
-        const Node<Solution>* tournamentSelection(const Node<Solution>* nodes, unsigned int nodeLength,
-                                                  const Parameters<FeatureFlags>* params) {
-            const Node<Solution>* bestNode;
+        std::shared_ptr<Node<Solution>> tournamentSelection(std::shared_ptr<Node<Solution>> nodes[],
+                                                            unsigned int nodeLength,
+                                                            const Parameters<FeatureFlags>& params) {
+            std::shared_ptr<Node<Solution>> bestNode;
             float bestScore = 0.0;
 
-            for (int i = 0; i < params->tournamentSize; i++) {
+            for (unsigned int i = 0; i < params.tournamentSize; i++) {
                 int idx = rand() % nodeLength;
-                if (nodes[idx].score > bestScore) {
-                    bestScore = nodes[idx].score;
-                    bestNode = &nodes[idx];
+                if (nodes[idx]->score > bestScore) {
+                    bestScore = nodes[idx]->score;
+                    bestNode = nodes[idx];
                 }
             }
 
@@ -60,41 +61,41 @@ namespace algen {
                             and scoring methods.
      */
     template <class InputData, class OutputData, class Solution, class FeatureFlags>
-    Node<Solution> runAlgorithm(const Parameters<FeatureFlags>* params, const InputData* input,
-                                Algorithm<InputData, OutputData, Solution, FeatureFlags>* algorithm,
-                                Analyzer<OutputData, Solution, FeatureFlags>* analyzer) {
+    std::shared_ptr<Node<Solution>> runAlgorithm(const Parameters<FeatureFlags>& params, const InputData& input,
+                                                 Algorithm<InputData, OutputData, Solution, FeatureFlags>& algorithm,
+                                                 Analyzer<OutputData, Solution, FeatureFlags>& analyzer) {
         // Define generational parameters
-        int poplen = params->population;
-        Node<Solution> population[poplen];
-        Node<Solution> nextPopulation[poplen];
-        OutputData outputs[poplen];
+        int poplen = params.population;
+        std::shared_ptr<Node<Solution>> population[poplen];
+        std::shared_ptr<Node<Solution>> nextPopulation[poplen];
+        std::shared_ptr<OutputData> outputs[poplen];
 
         // Best solutions
         float bestScore = 0.0;
-        Node<Solution> bestSolution;
-        OutputData bestOutput;
+        std::shared_ptr<Node<Solution>> bestSolution;
+        std::shared_ptr<OutputData> bestOutput;
 
         for (int i = 0; i < poplen; i++) {
-            population[i] = algorithm->allocateNode(input, params);
+            population[i] = algorithm.allocateNode(input, params);
         }
 
-        for (int generation = 0; generation < params->generations; generation++) {
+        for (int generation = 0; params.generations; generation++) {
             int nextPopIter = 0;
 
             // Evaluate all the solutions
             for (int r = 0; r < poplen; r++) {
-                outputs[r] = algorithm->generateOutput(&population[r], input, params);
-                population[r].score = analyzer->score(outputs[r], params);
+                outputs[r] = algorithm.generateOutput(population[r], input, params);
+                population[r]->score = analyzer.score(outputs[r], params);
 
-                if (population[r].score > bestScore) {
-                    bestScore = population[r].score;
+                if (population[r]->score > bestScore) {
+                    bestScore = population[r]->score;
                     bestSolution = population[r];
                     bestOutput = outputs[r];
                 }
             }
 
             // Check for the winning condition.
-            if (analyzer->checkSolution(bestScore, bestSolution.solution, bestOutput)) {
+            if (analyzer.checkSolution(bestScore, bestSolution->solution, bestOutput)) {
                 break;
             }
 
@@ -104,7 +105,7 @@ namespace algen {
 
             // Take the creame of the crop, in both directions. And we multiply by 0.5 because
             // each iteration takes 2 nodes
-            for (; nextPopIter < poplen * params->elitismFactor; nextPopIter += 2) {
+            for (; nextPopIter < poplen * params.elitismFactor; nextPopIter += 2) {
                 int bottomIdx = poplen - nextPopIter - 1;
                 int topIdx = nextPopIter;
                 nextPopulation[nextPopIter] = population[bottomIdx];
@@ -112,9 +113,10 @@ namespace algen {
             }
 
             for (; nextPopIter < poplen; nextPopIter++) {
-                const Node<Solution>* left = internal::tournamentSelection(population, poplen, params);
-                const Node<Solution>* right = internal::tournamentSelection(population, poplen, params);
-                nextPopulation[nextPopIter] = algorithm->combineNodes(left, right, params);
+                std::shared_ptr<Node<Solution>> left = internal::tournamentSelection(population, poplen, params);
+                std::shared_ptr<Node<Solution>> right = internal::tournamentSelection(population, poplen, params);
+
+                nextPopulation[nextPopIter] = algorithm.combineNodes(left, right, params);
             }
 
             // Promote nextPopulation into real population
