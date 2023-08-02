@@ -7,6 +7,7 @@
 #include "../src/algen.cpp"
 
 using namespace algen;
+using namespace std;
 
 /*********************************************/
 /** Structs needed for this genetic algorith */
@@ -51,7 +52,7 @@ class HelloAnalyzer : public Analyzer<OutputData, Solution, FeatureFlags> {
     // Score a given solution by calculating how far off each letter
     // is from the target and using the inverse difference as
     // the score.
-    float score(std::shared_ptr<OutputData> attempt, const Parameters<FeatureFlags>& params) {
+    float score(shared_ptr<OutputData> attempt, const Parameters<FeatureFlags>& params) {
         float score = 0.0;
         for (int i = 0; i < 13; i++) {
             int difference = abs(attempt->final[i] - target[i]);
@@ -68,7 +69,7 @@ class HelloAnalyzer : public Analyzer<OutputData, Solution, FeatureFlags> {
     // This method is invoked after each generation. Check if
     // the provided output matches the winning condition.
     // If this method returns true, the runner will short-cirucit.
-    bool checkSolution(float score, std::shared_ptr<Solution> solution, const std::shared_ptr<OutputData> attempt) {
+    bool checkSolution(float score, shared_ptr<Solution> solution, const shared_ptr<OutputData> attempt) {
         return score == 13.0 * 128.0;
     }
 };
@@ -80,9 +81,9 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
    public:
     // This method will take a solution, the input, the parameters, and evaluate
     // what a final output would look like given those things.
-    std::shared_ptr<OutputData> generateOutput(const std::shared_ptr<Solution> solution, const InputData& input,
-                                               const Parameters<FeatureFlags>& params) {
-        std::shared_ptr<OutputData> result(new OutputData());
+    shared_ptr<OutputData> generateOutput(const shared_ptr<Solution> solution, const InputData& input,
+                                          const Parameters<FeatureFlags>& params) {
+        shared_ptr<OutputData> result(new OutputData());
 
         for (int i = 0; i < 13; i++) {
             result->final[i] = (char)(input.seed[i] + solution->deltas[i]);
@@ -93,8 +94,8 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
 
     // This method will create a brand new, empty state. It should be randomized
     // values which are used to seed the initial population.
-    std::shared_ptr<Solution> generateRandomSolution(const InputData& input, const Parameters<FeatureFlags>& params) {
-        auto solution = std::make_shared<Solution>();
+    shared_ptr<Solution> generateRandomSolution(const InputData& input, const Parameters<FeatureFlags>& params) {
+        auto solution = make_shared<Solution>();
 
         for (int i = 0; i < 13; i++) {
             solution->deltas[i] = randomCharacter();
@@ -107,9 +108,9 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
     // There are many ways to implement this method, but in general, you should strive to
     // implement crossover and mutation (at a minimum). Whatever that looks likef or your
     // specific problem.
-    std::shared_ptr<Solution> combineNodes(const std::shared_ptr<Solution> left, const std::shared_ptr<Solution> right,
-                                           const Parameters<FeatureFlags>& params) {
-        std::shared_ptr<Solution> result(new Solution());
+    shared_ptr<Solution> combineNodes(const shared_ptr<Solution> left, const shared_ptr<Solution> right,
+                                      const Parameters<FeatureFlags>& params) {
+        shared_ptr<Solution> result(new Solution());
 
         for (int i = 0; i < 13; i++) {
             if (randomFloat() < params.crossoverFactor) {
@@ -136,8 +137,7 @@ class HelloAlgorithm : public Algorithm<InputData, OutputData, Solution, Feature
 };
 
 int64_t now() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
-        .count();
+    return chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
 }
 
 int main() {
@@ -163,11 +163,11 @@ int main() {
     HelloAnalyzer analyzer;
 
     // Execute the program.
-    auto winner = runAlgorithm(params, input, algorithm, analyzer);
+    shared_ptr<Solution> winner = runAlgorithm(params, input, algorithm, analyzer);
     int64_t end_time = now();
 
     // Output the best solution we've found
-    std::cout << "Winning output " << algorithm.generateOutput(winner, input, params)->final << std::endl;
-    std::cout << "Took " << (end_time - begin_time) << "ms " << std::endl;
+    cout << "Winning output " << algorithm.generateOutput(winner, input, params)->final << endl;
+    cout << "Took " << (end_time - begin_time) << "ms " << endl;
     return 0;
 }
